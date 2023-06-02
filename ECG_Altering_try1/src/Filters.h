@@ -13,4 +13,4 @@
 #endif /* SRC_FILTERS_H_ */
 
 
-float SecondOrderFilter( float p_dataArray[3], float filterCoefficients[5]);
+float SecondOrderFilter( float dataIn[3], float p_fCoef[2]);
