@@ -55,7 +55,8 @@
 #include "sleep.h"
 #include "ADCcode.h"
 #include "xgpio.h"
-
+#include "Filters.h"
+#include "stdlib.h"
 /************************** Constant Definitions ****************************/
 
 #define XADC_DEVICE_ID 		XPAR_XADCPS_0_DEVICE_ID
@@ -83,15 +84,14 @@ XGpio dac;
 //int result[5];
 int sum;
 
-float arrayECG[3];
-float outputlowpassA[3] = {0,0,0};
-float outputlowpassB[3] = {0,0,0};
-float outputlowpassC[3] = {0,0,0};
-float outputlowpassD[3] = {0,0,0};
-float resultlowpass[3] = {0,0,0};
-int n = 2;
 int main()
 {
+	// first we make all the array's for the filters and set them to zero
+	float *outputlowpassA, *outputlowpassB,*outputlowpassC,*outputlowpassD,*resultlowpass = (float*)calloc(3,sizeof(float));
+	//float *outputnotchA, *outputnotchB,*resultnotch = (float*)calloc(3,sizeof(float));
+	//float *outputhighpassA, *outputhighpassB,*outputhighpassC,*outputhighpassD,*resulthighpass = (float*)calloc(3,sizeof(float));
+	// them we make a array for the ECG
+	float arrayECG[3];
 	init_platform();
 	print("Starting program...\n\r");
 
@@ -107,36 +107,69 @@ int main()
     //XGpio_SetDataDirection(&dac, 1, 0x0);
 
     while(1){
+    	//shift the ECG data before putting new data into it
+    	Shiftleftdata(arrayECG, 3);
     	// get data from the XADC depending on the sampling frequency
-    	for (int i = 2; i > 0; i--)
-		{
-    		arrayECG[i-1] = arrayECG[i];
-		}
-
     	arrayECG[2] = XAdcGeTSampledValue(SAMPLE_FREQUENCY);
 
+    	// print the voltage
     	//printf("%0d.%03d Volts.\n\r", (int)(Voltagedata), XAdcFractionToInt(Voltagedata));
+
+
+    	// now we filter the data of the ECG
+
+    	// first we apply a 8th order lowpass filter with a steeper cutoff at ...Hz
     	// Cascade the 8th order lowpass filter into four 2nd order lowpass filters
-    	outputlowpassA[n]= -2*outputlowpassA[n-1] - outputlowpassA[n-2] + arrayECG[n] - 1.79396184525177*arrayECG[n-1] + 0.886283112007014*arrayECG[n-2];
-    	outputlowpassB[n]= -2*outputlowpassB[n-1] - outputlowpassB[n-2] + arrayECG[n] - 1.62340569764100*arrayECG[n-1] + 0.706949765682682*arrayECG[n-2];
-    	outputlowpassC[n]= -2*outputlowpassC[n-1] - outputlowpassC[n-2] + arrayECG[n] - 1.51329076583890*arrayECG[n-1] + 0.591168074568205*arrayECG[n-2];
-    	outputlowpassD[n]= -2*outputlowpassD[n-1] - outputlowpassD[n-2] + arrayECG[n] - 1.45970625437687*arrayECG[n-1] + 0.534825984961611*arrayECG[n-2];
+    	//outputlowpassA[n]= -2*outputlowpassA[n-1] - outputlowpassA[n-2] + arrayECG[n] - 1.79396184525177*arrayECG[n-1] + 0.886283112007014*arrayECG[n-2];
+    	//outputlowpassB[n]= -2*outputlowpassB[n-1] - outputlowpassB[n-2] + arrayECG[n] - 1.62340569764100*arrayECG[n-1] + 0.706949765682682*arrayECG[n-2];
+    	//outputlowpassC[n]= -2*outputlowpassC[n-1] - outputlowpassC[n-2] + arrayECG[n] - 1.51329076583890*arrayECG[n-1] + 0.591168074568205*arrayECG[n-2];
+    	//outputlowpassD[n]= -2*outputlowpassD[n-1] - outputlowpassD[n-2] + arrayECG[n] - 1.45970625437687*arrayECG[n-1] + 0.534825984961611*arrayECG[n-2];
 
     	//calculate the result
-    	resultlowpass[2] = outputlowpassA[2] * outputlowpassB[2] * outputlowpassC[2] *outputlowpassD[2];
+    	//resultlowpass[2] = (outputlowpassA[2]) * (outputlowpassB[2]) * (outputlowpassC[2]) * (outputlowpassD[2]);
 
     	// get the output data into their respective array
-    	for (int i = 2; i > 0; i--)
-    	{
-    		outputlowpassA[i-1] = outputlowpassA[i];
-    		outputlowpassB[i-1] = outputlowpassB[i];
-    		outputlowpassC[i-1] = outputlowpassC[i];
-    		outputlowpassD[i-1] = outputlowpassD[i];
-    	}
+    	Shiftleftdata(outputlowpassA,3);
+    	Shiftleftdata(outputlowpassB,3);
+    	Shiftleftdata(outputlowpassC,3);
+    	Shiftleftdata(outputlowpassD,3);
 
-    	//apply
+    	//Secondly we apply a 4th order notch filter from 49 to 51 Hz to suppress 50Hz
+    	// Cascade the 4th order notch filter into two 2nd order notch filters
+    	//outputnotchA[n]= 1.93187813428560*outputnotchA[n-1] - outputnotchA[n-2] +arrayECG[n]-1.92271809793349*arrayECG[n-1] +0.992520964225918*arrayECG[n-2];
+    	//outputnotchB[n]= 1.93187813428560*outputnotchB[n-1] - outputnotchB[n-2] +arrayECG[n]-1.92673324854103*arrayECG[n-1] +0.992724132428440*arrayECG[n-2];
 
-    	// shift the data in resultlowpass and in arrayECG
+    	// calculate the result
+    	//resultnotch[2] = outputnotchA[2] *outputnotchB[2];
+
+    	//get the output data into their respective array
+    	//Shiftleftdata(outputnotchA,3);
+    	//Shiftleftdata(outputnotchB,3);
+
+    	// shift the data in resultlowpass
+    	Shiftleftdata(resultlowpass,3);
+
+    	// Lastly we apply a high pass filter at ...Hz to suppress small muscle movements
+    	// Cascade the 8th order Highpass filter into four 2nd order lowpass filters
+    	//outputhighpassA[n]= outputhighpassA[n-1] + 2*outputhighpassA[n-2] + arrayECG[n] - 1.99928185537009*arrayECG[n-1] + 0.999285212575927*arrayECG[n-2];
+    	//outputhighpassB[n]= outputhighpassB[n-1] + 2*outputhighpassB[n-2] + arrayECG[n] - 1.99796244598246*arrayECG[n-1] + 0.997965800972741*arrayECG[n-2];
+    	//outputhighpassC[n]= outputhighpassC[n-1] + 2*outputhighpassC[n-2] + arrayECG[n] - 1.99695378965628*arrayECG[n-1] + 0.996957142952821*arrayECG[n-2];
+    	//outputhighpassD[n]= outputhighpassD[n-1] + 2*outputhighpassD[n-2] + arrayECG[n] - 1.99640833339892*arrayECG[n-1] + 0.996411685779522*arrayECG[n-2];
+
+    	//calculate the result
+    	//resulthighpass[2] = outputhighpassA[2] * outputhighpassB[2] * outputhighpassC[2] *outputhighpassD[2];
+
+    	// get the output data into their respective array
+    	//Shiftleftdata(outputhighpassA,3);
+    	//Shiftleftdata(outputhighpassB,3);
+    	//Shiftleftdata(outputhighpassC,3);
+    	//Shiftleftdata(outputhighpassD,3);
+
+    	// shift the data in resultnotch & resulthighpass
+    	//Shiftleftdata(resultnotch,3);
+    	//Shiftleftdata(resulthighpass,3);
+
+    	// after filtering, we can calculate BPM
 
     	//if (n == 2){n=0};
 	//RawADCdata = rawdata(VCCPintData_Sampled);
@@ -161,12 +194,12 @@ int main()
     	//cascade 2nd order part D
     	//y[n]= -2*y[n-1] - y[n-2] +x[n] -1.45970625437687*x[n-1] +0.534825984961611*x[n-2];
 
-    	//4th order bandpass filter cascade 2nd order part A
+    	//4th order notch filter cascade 2nd order part A
     	//y[n]= 1.93187813428560*y[n-1] - y[n-2] +x[n]-1.92271809793349*x[n-1] +0.992520964225918*x[n-2];
     	//cascade 2nd order part B
     	//y[n]= 1.93187813428560*y[n-1] - y[n-2] +x[n]-1.92673324854103*x[n-1] +0.992724132428440*x[n-2];
 
-    	//8th order bandpass filter cascade 2nd order part A
+    	//8th order High pass filter cascade 2nd order part A
     	//y[n]= y[n-1] 2*y[n-2] +x[n] -1.99928185537009*x[n-1] +0.999285212575927*x[n-2];
    	   	//cascade 2nd order part B
    	   	//y[n]= y[n-1] 2*y[n-2] +x[n] -1.99796244598246*x[n-1] +0.997965800972741*x[n-2];
@@ -191,6 +224,11 @@ int main()
 	}
 
     print("Program finished \n\r");
+    free(outputlowpassA);
+    free(outputlowpassB);
+    free(outputlowpassC);
+    free(outputlowpassD);
+    free(resultlowpass);
     cleanup_platform();
     return XST_SUCCESS;
 }
