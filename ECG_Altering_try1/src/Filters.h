@@ -14,3 +14,5 @@
 
 
 float SecondOrderFilter( float dataIn[3], float p_fCoef[2]);
+void shiftArray(float arr[]);
+
