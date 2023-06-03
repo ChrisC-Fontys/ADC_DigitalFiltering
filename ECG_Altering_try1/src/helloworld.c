@@ -87,20 +87,21 @@ int sum;
 int main()
 {
 	// first we make all the array's for the filters and set them to zero
-	float *outputlowpassA, *outputlowpassB,*outputlowpassC,*outputlowpassD,*resultlowpass;
+	float *outputlowpassA, *outputlowpassB,*outputlowpassC,*outputlowpassD,*resultlowpass, *arrayECG;
 
 	outputlowpassA = (float*)calloc(3,sizeof(float));
 	outputlowpassB = (float*)calloc(3,sizeof(float));
 	outputlowpassC = (float*)calloc(3,sizeof(float));
 	outputlowpassD = (float*)calloc(3,sizeof(float));
 	resultlowpass = (float*)calloc(3,sizeof(float));
+	arrayECG = (float*)calloc(3, sizeof(float));
 
 	//array of all filter coefficients
 	float cof_lowpassA[4]= {2,1,-1.79396184525177,0.886283112007014};
 	//float *outputnotchA, *outputnotchB,*resultnotch = (float*)calloc(3,sizeof(float));
 	//float *outputhighpassA, *outputhighpassB,*outputhighpassC,*outputhighpassD,*resulthighpass = (float*)calloc(3,sizeof(float));
 	// them we make a array for the ECG
-	float arrayECG[3];
+	//float arrayECG[3];
 	init_platform();
 	print("Starting program...\n\r");
 
