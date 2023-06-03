@@ -87,7 +87,16 @@ int sum;
 int main()
 {
 	// first we make all the array's for the filters and set them to zero
-	float *outputlowpassA, *outputlowpassB,*outputlowpassC,*outputlowpassD,*resultlowpass = (float*)calloc(3,sizeof(float));
+	float *outputlowpassA, *outputlowpassB,*outputlowpassC,*outputlowpassD,*resultlowpass;
+
+	outputlowpassA = (float*)calloc(3,sizeof(float));
+	outputlowpassB = (float*)calloc(3,sizeof(float));
+	outputlowpassC = (float*)calloc(3,sizeof(float));
+	outputlowpassD = (float*)calloc(3,sizeof(float));
+	resultlowpass = (float*)calloc(3,sizeof(float));
+
+	//array of all filter coefficients
+	float cof_lowpassA[4]= {2,1,-1.79396184525177,0.886283112007014};
 	//float *outputnotchA, *outputnotchB,*resultnotch = (float*)calloc(3,sizeof(float));
 	//float *outputhighpassA, *outputhighpassB,*outputhighpassC,*outputhighpassD,*resulthighpass = (float*)calloc(3,sizeof(float));
 	// them we make a array for the ECG
@@ -129,10 +138,12 @@ int main()
     	//resultlowpass[2] = (outputlowpassA[2]) * (outputlowpassB[2]) * (outputlowpassC[2]) * (outputlowpassD[2]);
 
     	// get the output data into their respective array
+
+    	SecondOrderFilter(arrayECG, cof_lowpassA, outputlowpassA);
     	Shiftleftdata(outputlowpassA,3);
-    	Shiftleftdata(outputlowpassB,3);
-    	Shiftleftdata(outputlowpassC,3);
-    	Shiftleftdata(outputlowpassD,3);
+    	//Shiftleftdata(outputlowpassB,3);
+    	//Shiftleftdata(outputlowpassC,3);
+    	//Shiftleftdata(outputlowpassD,3);
 
     	//Secondly we apply a 4th order notch filter from 49 to 51 Hz to suppress 50Hz
     	// Cascade the 4th order notch filter into two 2nd order notch filters

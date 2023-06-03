@@ -19,14 +19,18 @@ float cof_highpassB[4]= {-1,-2,-1.99796244598246,0.997965800972741};
 float cof_highpassC[4]= {-1,-2,-1.99695378965628,0.996957142952821};
 float cof_highpassD[4]= {-1,-2,-1.99640833339892,0.996411685779522};
 
-
+/*
+ * @param float* x : pointer to array of input of filter data
+ * @param float p_fCoef[] : array of filter coefficients. might be more corrrect to pass struct of filter instead
+ * @param float* y : pointer to array of output of filter data
+ */
 void SecondOrderFilter(float *x, float p_fCoef[],float *y)
 {
 	short n=2;
 	(y[n])= -(p_fCoef[0]) * (y[n-1]) - (p_fCoef[1])* (y[n-2])+(x[n])+ (p_fCoef[2])* (x[n-1]) + (p_fCoef[3])* (x[n-2]);
 }
 
-void Shiftleftdata(float *data_In[], int size)
+void Shiftleftdata(float *data_In, int size)
 {
 	for (int i = 1; i < size; i++)
 			{
